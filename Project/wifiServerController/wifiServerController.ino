@@ -65,3 +65,58 @@ void setup () {
   */
 
 }
+
+// @LOOP
+
+void loop () {
+
+    // If the server available, run the "checkClient" function
+
+    controller = server.available();
+
+    if (!controller) return;
+
+    commandFromController = checkControllerAction();
+
+    // If the incoming data is "turnright", run the directionServo_Right function
+    if (commandFromController == "turnright") directionServo_Right();
+
+    // If the incoming data is "turnleft", run the directionServo_Left function
+    else if (commandFromController == "turnleft") directionServo_Left();
+
+    // If the incoming data is "setdefault", run the directionServo_Default function
+    else if (commandFromController == "setdefault") directionServo_Default();
+
+    // If the incoming data is "speedup", run the speedController_Up function
+    else if (commandFromController == "speedup") speedController_Up();
+
+    // If the incoming data is "speeddown", run the speedController_Down function
+    else if (commandFromController == "speeddown") speedController_Down();
+
+    // If the incoming data is "stop", run the speedController_Stop function
+    else if (commandFromController == "stop") speedController_Stop();
+
+    // If the incoming data is "maxspeed", run the speedController_Max function
+    else if (commandFromController == "maxspeed") speedController_Max();
+
+    // If the incoming data is "off", run the airDriver_Off function
+    else if (commandFromController == "off") airDriver_Off();
+
+    // If the incoming data is "on", run the airDriver_On function
+    else if (commandFromController == "on") airDriver_On();
+
+// ++++++++++++++++++++++++++++++++++++++++++++++++ Run function according to incoming signal from app ++++++++++++++++++++++++++++++++++++++++++++++++++
+}
+
+// @CHECK_CONTORLLER
+
+String checkControllerAction (void) {
+  while(!client.available()) delay(1);
+  String request = client.readStringUntil('\r');
+  Serial.println(request);
+  request.remove(0, 5);
+  request.remove(request.length()-9,9);
+  return request;
+}
+
+// @EVENTS_AIRDRIVER
