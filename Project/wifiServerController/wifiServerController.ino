@@ -32,6 +32,24 @@ int PIN_speedController = 5;
 Servo speedController;
 int DEGREE_speedController = 65; // 67 is minimal state of move
 
+// @NOBADSTAGE_INIT
+int noBadStage_Handler = 0;
+
+int noBadStage_OKAY = 0;
+int noBadStage_ABORT = 42;
+
+int noBadStage_AIR_FILLED = 0;
+int noBadStage_AIR_OFF = 0;
+int noBadStage_SIGNAL_AIR = 9;
+
+int noBadStage_DIRECTION_NOW = 90;
+int noBadStage_DIRECTION_NORMAL = 1;
+int noBadStage_SIGNAL_DIRECTION = 13;
+
+int noBadStage_SPEED_NOW = 65;
+int noBadStage_SPEED_OFF = 65;
+int noBadStage_SIGNAL_SPEED = 17;
+
 // @SETUP
 
 void setup () {
@@ -59,9 +77,9 @@ void setup () {
   server.begin();
 
   // start serial for debugging
-  /*
   Serial.begin(115200);
   Serial.println("Setup ");
+  /*
   */
 
 }
@@ -111,8 +129,8 @@ void loop () {
 // @CHECK_CONTORLLER
 
 String checkControllerAction (void) {
-  while(!client.available()) delay(1);
-  String request = client.readStringUntil('\r');
+  while(!contoller.available()) delay(1);
+  String request = contoller.readStringUntil('\r');
   Serial.println(request);
   request.remove(0, 5);
   request.remove(request.length()-9,9);
