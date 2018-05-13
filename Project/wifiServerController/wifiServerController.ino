@@ -5,7 +5,7 @@
 // @INIT
 
 // define port
-WiFiClient contoller;
+WiFiClient controller;
 WiFiServer server(80);
 
 // WIFI settings
@@ -47,13 +47,13 @@ int DEGREE_speedController = speedController_stopStage; // 67 is minimal state o
 
 // @NOBADSTAGE_INIT
 
-// handler of bad events
-int noBadStage_Handler = noBadStage_OKAY;
-
 // signal if all okay
 int noBadStage_OKAY = 0;
 // signal to abort
 int noBadStage_ABORT = 42;
+
+// handler of bad events
+int noBadStage_Handler = noBadStage_OKAY;
 
 // in start no air
 int noBadStage_AIR_FILLED = 0;
@@ -191,9 +191,9 @@ void loop () {
 
 String checkControllerAction (void) {
 
-  while(!contoller.available()) delay(1);
+  while(!controller.available()) delay(1);
 
-  String request = contoller.readStringUntil('\r');
+  String request = controller.readStringUntil('\r');
 
   Serial.println(request);
 
