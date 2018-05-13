@@ -39,6 +39,7 @@ int DEGREE_directionServo = DIRECTION_NORMAL; // 90 is normal state
 // SPEED CONTROLLER PIN 5
 
 int speedController_stopStage = 65;
+int speedController_maxSpeedStage = 180;
 
 int PIN_speedController = 5;
 Servo speedController;
@@ -54,7 +55,7 @@ int noBadStage_OKAY = 0;
 // signal to abort
 int noBadStage_ABORT = 42;
 
-// if overfill or try to unfill void
+// in start no air
 int noBadStage_AIR_FILLED = 0;
 // error of filling
 int noBadStage_SIGNAL_AIR = 9;
@@ -160,21 +161,24 @@ void loop () {
 
       if (noBadStage_Handler == noBadStage_SIGNAL_AIR) {
         if (noBadStage_AIR_FILLED == 1) {
-          noBadStage_Handler = airDriver_Off();
-          // @TODO
+          speedController_Stop();
+          directionServo_Default();
         }
       }
 
-      else if (noBadStage_Handler == ) {
-
-      }
-
-      else if (noBadStage_Handler == noBadStage_SIGNAL_DIRECTION) {
+      else if (noBadStage_Handler == noBadStage_ABORT) {
+        airDriver_Off();
+        speedController_Stop();
         directionServo_Default();
       }
 
-      else if (noBadStage_Handler == ) {
+      else if (noBadStage_Handler == noBadStage_SIGNAL_DIRECTION) {
+        speedController_Stop();
+        directionServo_Default();
+      }
 
+      else if (noBadStage_Handler == noBadStage_SIGNAL_SPEED) {
+        speedController_Stop();
       }
 
     }
@@ -238,7 +242,10 @@ int airDriver_Off (void) {
 int directionServo_Right (void) {
 
   if (noBadStage_DIRECTION_NOW == DIRECTION_RIGHT)
-    return;
+    return noBadStage_OKAY;
+
+  if (noBadStage_AIR_FILLED == 0)
+    return noBadStage_SIGNAL_DIRECTION;
 
   DEGREE_directionServo = DIRECTION_RIGHT;
 
@@ -252,7 +259,10 @@ int directionServo_Right (void) {
 int directionServo_Left (void) {
 
   if (noBadStage_DIRECTION_NOW == DIRECTION_LEFT)
-    return;
+    return noBadStage_OKAY;
+
+  if (noBadStage_AIR_FILLED == 0)
+    return noBadStage_SIGNAL_DIRECTION;
 
   DEGREE_directionServo = DIRECTION_LEFT;
 
@@ -275,3 +285,82 @@ int directionServo_Default (void) {
 }
 
 // @EVENTS_SPEEDCONTROLLER
+
+int speedController_Up (void) {
+
+  if (noBadStage_AIR_FILLED == 0)
+    return noBadStage_SIGNAL_SPEED;
+
+  if (noBadStage_SPEED_NOW == speedController_maxSpeedStage)
+    return noBadStage_OKAY;
+
+  else if (noBadStage_SPEED_NOW > speedController_maxSpeedStage || DEGREE_speedController > speedController_maxSpeedStage) {
+
+       DEGREE_speedController = speedController_maxSpeedStage;
+       speedController.write(DEGREE_speedController);
+       noBadStage_SPEED_NOW = DEGREE_speedController;
+
+       return noBadStage_OKAY;
+  }
+
+  DEGREE_speedController += 5;
+
+  speedController.write(DEGREE_speedController);
+  noBadStage_SPEED_NOW = DEGREE_speedController;
+
+  return noBadStage_OKAY;
+}
+
+int speedController_Down (void) {
+
+  if (noBadStage_AIR_FILLED == 0)
+    return noBadStage_SIGNAL_SPEED;
+
+  if (noBadStage_SPEED_NOW == speedController_stopStage)
+    return noBadStage_OKAY;
+
+  else if (noBadStage_SPEED_NOW < speedController_stopStage || DEGREE_speedController < speedController_stopStage) {
+
+       DEGREE_speedController = speedController_stopStage;
+       speedController.write(DEGREE_speedController);
+       noBadStage_SPEED_NOW = DEGREE_speedController;
+
+       return noBadStage_OKAY;
+  }
+
+  DEGREE_speedController -= 5;
+
+  speedController.write(DEGREE_speedController);
+  noBadStage_SPEED_NOW = DEGREE_speedController;
+
+  return noBadStage_OKAY;
+}
+
+int speedController_Max (void) {
+
+  if (noBadStage_AIR_FILLED == 0)
+    return noBadStage_SIGNAL_SPEED;
+
+  if (noBadStage_SPEED_NOW == speedController_maxSpeedStage)
+    return noBadStage_OKAY;
+
+  DEGREE_speedController = speedController_maxSpeedStage;
+
+  speedController.write(DEGREE_speedController);
+  noBadStage_SPEED_NOW = DEGREE_speedController;
+
+  return noBadStage_OKAY;
+}
+
+int speedController_Stop (void) {
+
+   DEGREE_speedController = speedController_stopStage;
+
+   speedController.write(DEGREE_speedController);
+   noBadStage_SPEED_NOW = DEGREE_speedController;
+
+   if (noBadStage_AIR_FILLED == 0)
+    return noBadStage_ABORT;
+
+   return noBadStage_OKAY;
+ }
