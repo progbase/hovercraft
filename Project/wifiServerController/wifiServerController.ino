@@ -169,8 +169,8 @@ void loop () {
 
       }
 
-      else if (noBadStage_Handler == ) {
-
+      else if (noBadStage_Handler == noBadStage_SIGNAL_DIRECTION) {
+        directionServo_Default();
       }
 
       else if (noBadStage_Handler == ) {
@@ -237,6 +237,9 @@ int airDriver_Off (void) {
 
 int directionServo_Right (void) {
 
+  if (noBadStage_DIRECTION_NOW == DIRECTION_RIGHT)
+    return;
+
   DEGREE_directionServo = DIRECTION_RIGHT;
 
   directionServo.write(DEGREE_directionServo);
@@ -247,6 +250,9 @@ int directionServo_Right (void) {
 }
 
 int directionServo_Left (void) {
+
+  if (noBadStage_DIRECTION_NOW == DIRECTION_LEFT)
+    return;
 
   DEGREE_directionServo = DIRECTION_LEFT;
 
@@ -259,5 +265,13 @@ int directionServo_Left (void) {
 
 int directionServo_Default (void) {
 
-  
+  DEGREE_directionServo = DIRECTION_NORMAL;
+
+  directionServo.write(DEGREE_directionServo);
+  noBadStage_DIRECTION_NORMAL = 1;
+  noBadStage_DIRECTION_NOW = DIRECTION_NORMAL;
+
+  return noBadStage_OKAY;
 }
+
+// @EVENTS_SPEEDCONTROLLER
