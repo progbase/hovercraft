@@ -19,59 +19,39 @@ String  commandFromController ="";
 
 // AIR PIN 2
 
-int airDriver_FillStage = 140;
-int airDriver_UnfillStage = 0;
+// controller degree for fill with air
+int airDriver_Stage_Fill = 80;
+// controller degree for fill with air
+int airDriver_Stage_Unfill = 0;
 
-int PIN_airDriver = 2;
-Servo airDriver;
-int DEGREE_airDriver = airDriver_UnfillStage; // zero for full disable
+int PIN_airDriver_1 = 14;
+int PIN_airDriver_2 = 12;
+Servo airDriver_1;
+Servo airDriver_2;
+
+// controller degree to unfill stage
+int DEGREE_airDriver = airDriver_Stage_Unfill;
 
 // DiRECTION (LEFT|RIGHT) PIN 4
 
-int DIRECTION_NORMAL = 90;
-int DIRECTION_LEFT = 135;
-int DIRECTION_RIGHT = 45;
+// servo motor is not really correct in degrees
+int DIRECTION_NORMAL = 78; // == 90*
+int DIRECTION_LEFT = 108; // == 120*
+int DIRECTION_RIGHT = 48; // == 60*
 
 int PIN_directionServo = 4;
 Servo directionServo;
-int DEGREE_directionServo = DIRECTION_NORMAL; // 90 is normal state
+int DEGREE_directionServo = DIRECTION_NORMAL; // degrees to normal stage
 
 // SPEED CONTROLLER PIN 5
 
-int speedController_stopStage = 70;
-int speedController_maxSpeedStage = 180;
-int speedController_step = 5;
+int speedController_stopStage = 60;
+int speedController_maxSpeedStage = 90;
+int speedController_step = 10;
 
 int PIN_speedController = 5;
 Servo speedController;
-int DEGREE_speedController = speedController_stopStage; // 67 is minimal state of move
-
-// @NOBADSTAGE_INIT
-
-// signal if all okay
-int noBadStage_OKAY = 0;
-// signal to abort
-int noBadStage_ABORT = 42;
-
-// handler of bad events
-int noBadStage_Handler = noBadStage_OKAY;
-
-// in start no air
-int noBadStage_AIR_FILLED = 0;
-// error of filling
-int noBadStage_SIGNAL_AIR = 9;
-
-// present stage of direction
-int noBadStage_DIRECTION_NOW = DIRECTION_NORMAL;
-// if in normal direction
-int noBadStage_DIRECTION_NORMAL = 1;
-// if any problem detected
-int noBadStage_SIGNAL_DIRECTION = 13;
-
-// present stage of speed controller
-int noBadStage_SPEED_NOW = speedController_stopStage;
-// signal if anything goes bad
-int noBadStage_SIGNAL_SPEED = 17;
+int DEGREE_speedController = speedController_stopStage; // to minimal state of move
 
 // @SETUP
 
@@ -79,22 +59,21 @@ void setup () {
 
   // servo init
 
-  airDriver.attach(PIN_airDriver);
+  airDriver_1.attach(PIN_airDriver_1);
+  airDriver_2.attach(PIN_airDriver_2);
 
   directionServo.attach(PIN_directionServo);
 
   speedController.attach(PIN_speedController);
 
-
   // start serial for debugging
+  /*
   Serial.begin(115200);
   Serial.println("Setup ");
-  /*
   */
 
   // wifi server inits
   server.begin();
-
 
 }
 
@@ -106,257 +85,170 @@ void loop () {
     controller = server.available();
     if (!controller) return;
 
-    // init for noBadStage
-    noBadStage_Handler = noBadStage_OKAY;
-
     // take command from controller
     commandFromController = checkControllerAction();
 
-    // If the incoming data is "turnright", run the directionServo_Right function
+    // If the incoming command is "turnright", run the directionServo_Right function
     if (commandFromController == "turnright")
-    noBadStage_Handler =  directionServo_Right();
+      directionServo_Right();
 
-    // If the incoming data is "turnleft", run the directionServo_Left function
+    // If the incoming command is "turnleft", run the directionServo_Left function
     else if (commandFromController == "turnleft")
-    noBadStage_Handler = directionServo_Left();
+      directionServo_Left();
 
-    // If the incoming data is "setdefault", run the directionServo_Default function
+    // If the incoming command is "setdefault", run the directionServo_Default function
     else if (commandFromController == "setdefault")
-    noBadStage_Handler = directionServo_Default();
+      directionServo_Default();
 
-    // If the incoming data is "speedup", run the speedController_Up function
+    // If the incoming command is "speedup", run the speedController_Up function
     else if (commandFromController == "speedup")
-    noBadStage_Handler = speedController_Up();
+      speedController_Up();
 
-    // If the incoming data is "speeddown", run the speedController_Down function
+    // If the incoming command is "speeddown", run the speedController_Down function
     else if (commandFromController == "speeddown")
-    noBadStage_Handler = speedController_Down();
+      speedController_Down();
 
-    // If the incoming data is "stop", run the speedController_Stop function
+    // If the incoming command is "stop", run the speedController_Stop function
     else if (commandFromController == "stop")
-    noBadStage_Handler = speedController_Stop();
+      speedController_Stop();
 
-    // If the incoming data is "maxspeed", run the speedController_Max function
+    // If the incoming command is "maxspeed", run the speedController_Max function
     else if (commandFromController == "maxspeed")
-    noBadStage_Handler = speedController_Max();
+      speedController_Max();
 
-    // If the incoming data is "off", run the airDriver_Off function
+    // If the incoming command is "off", run the airDriver_Off function
     else if (commandFromController == "off")
-    noBadStage_Handler = airDriver_Off();
+      airDriver_Off();
 
-    // If the incoming data is "on", run the airDriver_On function
+    // If the incoming command is "on", run the airDriver_On function
     else if (commandFromController == "on")
-    noBadStage_Handler = airDriver_On();
+      airDriver_On();
 
-    // events
-    airDriver.write(DEGREE_airDriver);
+    // events write
+    airDriver_1.write(DEGREE_airDriver);
+    airDriver_2.write(DEGREE_airDriver);
 
     directionServo.write(DEGREE_directionServo);
 
     speedController.write(DEGREE_speedController);
 
-    // @NOBADSTAGE_HANDLER
-    if (noBadStage_Handler != noBadStage_OKAY) {
-
-      if (noBadStage_Handler == noBadStage_SIGNAL_AIR) {
-        if (noBadStage_AIR_FILLED == 1) {
-          speedController_Stop();
-          speedController.write(DEGREE_speedController);
-          directionServo_Default();
-          directionServo.write(DEGREE_directionServo);
-        }
-      }
-
-      else if (noBadStage_Handler == noBadStage_ABORT) {
-        airDriver_Off();
-        airDriver.write(DEGREE_airDriver);
-        speedController_Stop();
-        speedController.write(DEGREE_speedController);
-        directionServo_Default();
-        directionServo.write(DEGREE_directionServo);
-      }
-
-      else if (noBadStage_Handler == noBadStage_SIGNAL_DIRECTION) {
-        speedController_Stop();
-        speedController.write(DEGREE_speedController);
-        directionServo_Default();
-        directionServo.write(DEGREE_directionServo);
-      }
-
-      else if (noBadStage_Handler == noBadStage_SIGNAL_SPEED) {
-        speedController_Stop();
-        speedController.write(DEGREE_speedController);
-      }
-
-    }
-
-
-// ++++++++++++++++++++++++++++++++++++++++++++++++ Run function according to incoming signal from app ++++++++++++++++++++++++++++++++++++++++++++++++++
 }
 
 // @CHECK_CONTORLLER
 
 String checkControllerAction (void) {
 
+  // wait for client signal
   while(!controller.available()) delay(1);
 
+  // take command
   String request = controller.readStringUntil('\r');
 
-  Serial.println(request);
+  // Serial.println(request);
 
+  // delete http:/someIp/ from http:/someIp/command
   request.remove(0, 5);
 
   request.remove(request.length()-9,9);
 
+  // return it
   return request;
 }
 
+// @SEND_CONTROLLER
+
+/*
+void sentSignalToController (String sig) {
+
+  while(!controller.available()) delay(1);
+
+  controller.write(sig);
+}
+*/
+
 // @EVENTS_AIRDRIVER
 
-int airDriver_On (void) {
+// starts air in
+void airDriver_On (void) {
 
-  if (noBadStage_AIR_FILLED == 1)
-    return noBadStage_SIGNAL_AIR;
+  DEGREE_airDriver = airDriver_Stage_Fill;
 
-  DEGREE_airDriver = airDriver_FillStage;
-
-  noBadStage_AIR_FILLED = 1;
-
-  return noBadStage_OKAY;
 }
 
-int airDriver_Off (void) {
+// off the air in (and probably all)
+void airDriver_Off (void) {
 
-    if (noBadStage_SPEED_NOW != speedController_stopStage)
+    DEGREE_airDriver = airDriver_Stage_Fill;
+
+    if (DEGREE_speedController != speedController_stopStage) {
       speedController_Stop();
-    if (noBadStage_DIRECTION_NORMAL != 1)
+      speedController.write(DEGREE_speedController);
+    }
+
+    if (DEGREE_directionServo != DIRECTION_NORMAL) {
       directionServo_Default();
+      directionServo.write(DEGREE_directionServo);
+    }
 
-    if (noBadStage_AIR_FILLED == 0)
-      return noBadStage_SIGNAL_AIR;
-
-    DEGREE_airDriver = airDriver_UnfillStage;
-
-    noBadStage_AIR_FILLED = 0;
-
-    return noBadStage_OKAY;
 }
 
 // @EVENTS_DIRECTIONCONTROLLER
 
-int directionServo_Right (void) {
+// change direction of servo to right
+void directionServo_Right (void) {
 
-  if (noBadStage_DIRECTION_NOW == DIRECTION_RIGHT)
-    return noBadStage_OKAY;
-
-  if (noBadStage_AIR_FILLED == 0)
-    return noBadStage_SIGNAL_DIRECTION;
+  if (DEGREE_directionServo == DIRECTION_RIGHT)
+    return;
 
   DEGREE_directionServo = DIRECTION_RIGHT;
 
-  noBadStage_DIRECTION_NOW = DIRECTION_RIGHT;
-  noBadStage_DIRECTION_NORMAL = 0;
-
-  return noBadStage_OKAY;
 }
 
-int directionServo_Left (void) {
+// change direction of servo to left
+void directionServo_Left (void) {
 
-  if (noBadStage_DIRECTION_NOW == DIRECTION_LEFT)
-    return noBadStage_OKAY;
-
-  if (noBadStage_AIR_FILLED == 0)
-    return noBadStage_SIGNAL_DIRECTION;
+  if (DEGREE_directionServo == DIRECTION_LEFT)
+    return;
 
   DEGREE_directionServo = DIRECTION_LEFT;
 
-  noBadStage_DIRECTION_NOW = DIRECTION_LEFT;
-  noBadStage_DIRECTION_NORMAL = 0;
-
-  return noBadStage_OKAY;
 }
 
-int directionServo_Default (void) {
+// change direction of servo to default
+void directionServo_Default (void) {
 
   DEGREE_directionServo = DIRECTION_NORMAL;
 
-  noBadStage_DIRECTION_NORMAL = 1;
-  noBadStage_DIRECTION_NOW = DIRECTION_NORMAL;
-
-  return noBadStage_OKAY;
 }
 
 // @EVENTS_SPEEDCONTROLLER
 
-int speedController_Up (void) {
-
-  if (noBadStage_AIR_FILLED == 0)
-    return noBadStage_SIGNAL_SPEED;
-
-  if (noBadStage_SPEED_NOW == speedController_maxSpeedStage)
-    return noBadStage_OKAY;
-
-  else if (noBadStage_SPEED_NOW > speedController_maxSpeedStage || DEGREE_speedController > speedController_maxSpeedStage) {
-
-       DEGREE_speedController = speedController_maxSpeedStage;
-       noBadStage_SPEED_NOW = DEGREE_speedController;
-
-       return noBadStage_OKAY;
-  }
+// speedup the speed by step
+void speedController_Up (void) {
 
   DEGREE_speedController += speedController_step;
 
-  noBadStage_SPEED_NOW = DEGREE_speedController;
-
-  return noBadStage_OKAY;
 }
 
-int speedController_Down (void) {
-
-  if (noBadStage_AIR_FILLED == 0)
-    return noBadStage_SIGNAL_SPEED;
-
-  if (noBadStage_SPEED_NOW == speedController_stopStage)
-    return noBadStage_OKAY;
-
-  else if (noBadStage_SPEED_NOW < speedController_stopStage || DEGREE_speedController < speedController_stopStage) {
-
-       DEGREE_speedController = speedController_stopStage;
-       noBadStage_SPEED_NOW = DEGREE_speedController;
-
-       return noBadStage_OKAY;
-  }
+// speeddown the speed by step
+void speedController_Down (void) {
 
   DEGREE_speedController -= speedController_step;
 
-  noBadStage_SPEED_NOW = DEGREE_speedController;
-
-  return noBadStage_OKAY;
 }
 
-int speedController_Max (void) {
+// speedup the speed to max speed position
+void speedController_Max (void) {
 
-  if (noBadStage_AIR_FILLED == 0)
-    return noBadStage_SIGNAL_SPEED;
-
-  if (noBadStage_SPEED_NOW == speedController_maxSpeedStage)
-    return noBadStage_OKAY;
+  if (DEGREE_speedController >= speedController_maxSpeedStage)
+    return;
 
   DEGREE_speedController = speedController_maxSpeedStage;
-
-  noBadStage_SPEED_NOW = DEGREE_speedController;
-
-  return noBadStage_OKAY;
 }
 
-int speedController_Stop (void) {
+// speeddown the speed to stop position
+void speedController_Stop (void) {
 
    DEGREE_speedController = speedController_stopStage;
 
-   noBadStage_SPEED_NOW = DEGREE_speedController;
-
-   if (noBadStage_AIR_FILLED == 0)
-    return noBadStage_ABORT;
-
-   return noBadStage_OKAY;
  }
