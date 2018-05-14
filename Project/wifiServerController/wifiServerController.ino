@@ -218,16 +218,12 @@ int airDriver_On (void) {
 
   DEGREE_airDriver = airDriver_FillStage;
 
-  noBadStage_AIR_FILLED = 1;
-
   return noBadStage_OKAY;
 }
 
 int airDriver_Off (void) {
 
     DEGREE_airDriver = airDriver_UnfillStage;
-
-    noBadStage_AIR_FILLED = 0;
 
     if (noBadStage_SPEED_NOW != speedController_stopStage)
       return noBadStage_ABORT;
@@ -284,7 +280,7 @@ int speedController_Up (void) {
 
   else if (noBadStage_SPEED_NOW > speedController_maxSpeedStage || DEGREE_speedController > speedController_maxSpeedStage) {
 
-       DEGREE_speedController = speedController_maxSpeedStage;
+       DEGREE_speedController += speedController_maxSpeedStage;
        noBadStage_SPEED_NOW = DEGREE_speedController;
 
        return noBadStage_OKAY;
@@ -304,7 +300,7 @@ int speedController_Down (void) {
 
   else if (noBadStage_SPEED_NOW < speedController_stopStage || DEGREE_speedController < speedController_stopStage) {
 
-       DEGREE_speedController = speedController_stopStage;
+       DEGREE_speedController -= speedController_stopStage;
        noBadStage_SPEED_NOW = DEGREE_speedController;
 
        return noBadStage_OKAY;
