@@ -30,9 +30,9 @@ int DEGREE_airDriver = airDriver_Stage_Fill; // zero for full disable
 
 // DiRECTION (LEFT|RIGHT) PIN 4
 
-int DIRECTION_NORMAL = 90;
-int DIRECTION_LEFT = 135;
-int DIRECTION_RIGHT = 45;
+int DIRECTION_NORMAL = 78;
+int DIRECTION_LEFT = 108;
+int DIRECTION_RIGHT = 48;
 
 int PIN_directionServo = 4;
 Servo directionServo;
@@ -79,6 +79,8 @@ void loop () {
     // if the server available
     controller = server.available();
     if (!controller) return;
+
+    commandFromController = checkControllerAction();
 
     // If the incoming data is "turnright", run the directionServo_Right function
     if (commandFromController == "turnright")
@@ -158,13 +160,13 @@ void sentSignalToController (String sig) {
 
 void airDriver_On (void) {
 
-  DEGREE_airDriver = airDriver_FillStage;
+  DEGREE_airDriver = airDriver_Stage_Fill;
 
 }
 
 void airDriver_Off (void) {
 
-    DEGREE_airDriver = airDriver_UnfillStage;
+    DEGREE_airDriver = airDriver_Stage_Fill;
 
     if (DEGREE_speedController != speedController_stopStage) {
         speedController_Stop();
