@@ -19,24 +19,29 @@ String  commandFromController ="";
 
 // AIR PIN 2
 
+// controller degree for fill with air
 int airDriver_Stage_Fill = 80;
+// controller degree for fill with air
 int airDriver_Stage_Unfill = 0;
 
 int PIN_airDriver_1 = 14;
 int PIN_airDriver_2 = 12;
 Servo airDriver_1;
 Servo airDriver_2;
-int DEGREE_airDriver = airDriver_Stage_Fill; // zero for full disable
+
+// controller degree to unfill stage
+int DEGREE_airDriver = airDriver_Stage_Unfill;
 
 // DiRECTION (LEFT|RIGHT) PIN 4
 
-int DIRECTION_NORMAL = 78;
-int DIRECTION_LEFT = 108;
-int DIRECTION_RIGHT = 48;
+// servo motor is not really correct in degrees
+int DIRECTION_NORMAL = 78; // == 90*
+int DIRECTION_LEFT = 108; // == 120*
+int DIRECTION_RIGHT = 48; // == 60*
 
 int PIN_directionServo = 4;
 Servo directionServo;
-int DEGREE_directionServo = DIRECTION_NORMAL; // 90 is normal state
+int DEGREE_directionServo = DIRECTION_NORMAL; // degrees to normal stage
 
 // SPEED CONTROLLER PIN 5
 
@@ -46,7 +51,7 @@ int speedController_step = 10;
 
 int PIN_speedController = 5;
 Servo speedController;
-int DEGREE_speedController = speedController_stopStage; // 67 is minimal state of move
+int DEGREE_speedController = speedController_stopStage; // to minimal state of move
 
 // @SETUP
 
@@ -62,9 +67,9 @@ void setup () {
   speedController.attach(PIN_speedController);
 
   // start serial for debugging
+  /*
   Serial.begin(115200);
   Serial.println("Setup ");
-  /*
   */
 
   // wifi server inits
@@ -80,45 +85,46 @@ void loop () {
     controller = server.available();
     if (!controller) return;
 
+    // take command from controller
     commandFromController = checkControllerAction();
 
-    // If the incoming data is "turnright", run the directionServo_Right function
+    // If the incoming command is "turnright", run the directionServo_Right function
     if (commandFromController == "turnright")
       directionServo_Right();
 
-    // If the incoming data is "turnleft", run the directionServo_Left function
+    // If the incoming command is "turnleft", run the directionServo_Left function
     else if (commandFromController == "turnleft")
       directionServo_Left();
 
-    // If the incoming data is "setdefault", run the directionServo_Default function
+    // If the incoming command is "setdefault", run the directionServo_Default function
     else if (commandFromController == "setdefault")
       directionServo_Default();
 
-    // If the incoming data is "speedup", run the speedController_Up function
+    // If the incoming command is "speedup", run the speedController_Up function
     else if (commandFromController == "speedup")
       speedController_Up();
 
-    // If the incoming data is "speeddown", run the speedController_Down function
+    // If the incoming command is "speeddown", run the speedController_Down function
     else if (commandFromController == "speeddown")
       speedController_Down();
 
-    // If the incoming data is "stop", run the speedController_Stop function
+    // If the incoming command is "stop", run the speedController_Stop function
     else if (commandFromController == "stop")
       speedController_Stop();
 
-    // If the incoming data is "maxspeed", run the speedController_Max function
+    // If the incoming command is "maxspeed", run the speedController_Max function
     else if (commandFromController == "maxspeed")
       speedController_Max();
 
-    // If the incoming data is "off", run the airDriver_Off function
+    // If the incoming command is "off", run the airDriver_Off function
     else if (commandFromController == "off")
       airDriver_Off();
 
-    // If the incoming data is "on", run the airDriver_On function
+    // If the incoming command is "on", run the airDriver_On function
     else if (commandFromController == "on")
       airDriver_On();
 
-    // events
+    // events write
     airDriver_1.write(DEGREE_airDriver);
     airDriver_2.write(DEGREE_airDriver);
 
@@ -132,16 +138,20 @@ void loop () {
 
 String checkControllerAction (void) {
 
+  // wait for client signal
   while(!controller.available()) delay(1);
 
+  // take command
   String request = controller.readStringUntil('\r');
 
-  Serial.println(request);
+  // Serial.println(request);
 
+  // delete http:/someIp/ from http:/someIp/command
   request.remove(0, 5);
 
   request.remove(request.length()-9,9);
 
+  // return it
   return request;
 }
 
@@ -158,19 +168,21 @@ void sentSignalToController (String sig) {
 
 // @EVENTS_AIRDRIVER
 
+// starts air in
 void airDriver_On (void) {
 
   DEGREE_airDriver = airDriver_Stage_Fill;
 
 }
 
+// off the air in (and probably all)
 void airDriver_Off (void) {
 
     DEGREE_airDriver = airDriver_Stage_Fill;
 
     if (DEGREE_speedController != speedController_stopStage) {
-        speedController_Stop();
-        speedController.write(DEGREE_speedController);
+      speedController_Stop();
+      speedController.write(DEGREE_speedController);
     }
 
     if (DEGREE_directionServo != DIRECTION_NORMAL) {
@@ -182,6 +194,7 @@ void airDriver_Off (void) {
 
 // @EVENTS_DIRECTIONCONTROLLER
 
+// change direction of servo to right
 void directionServo_Right (void) {
 
   if (DEGREE_directionServo == DIRECTION_RIGHT)
@@ -191,6 +204,7 @@ void directionServo_Right (void) {
 
 }
 
+// change direction of servo to left
 void directionServo_Left (void) {
 
   if (DEGREE_directionServo == DIRECTION_LEFT)
@@ -200,6 +214,7 @@ void directionServo_Left (void) {
 
 }
 
+// change direction of servo to default
 void directionServo_Default (void) {
 
   DEGREE_directionServo = DIRECTION_NORMAL;
@@ -208,18 +223,21 @@ void directionServo_Default (void) {
 
 // @EVENTS_SPEEDCONTROLLER
 
+// speedup the speed by step
 void speedController_Up (void) {
 
   DEGREE_speedController += speedController_step;
 
 }
 
+// speeddown the speed by step
 void speedController_Down (void) {
 
   DEGREE_speedController -= speedController_step;
 
 }
 
+// speedup the speed to max speed position
 void speedController_Max (void) {
 
   if (DEGREE_speedController >= speedController_maxSpeedStage)
@@ -228,6 +246,7 @@ void speedController_Max (void) {
   DEGREE_speedController = speedController_maxSpeedStage;
 }
 
+// speeddown the speed to stop position
 void speedController_Stop (void) {
 
    DEGREE_speedController = speedController_stopStage;
