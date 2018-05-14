@@ -38,8 +38,9 @@ int DEGREE_directionServo = DIRECTION_NORMAL; // 90 is normal state
 
 // SPEED CONTROLLER PIN 5
 
-int speedController_stopStage = 65;
+int speedController_stopStage = 70;
 int speedController_maxSpeedStage = 180;
+int speedController_step = 5;
 
 int PIN_speedController = 5;
 Servo speedController;
@@ -303,7 +304,7 @@ int speedController_Up (void) {
        return noBadStage_OKAY;
   }
 
-  DEGREE_speedController += 5;
+  DEGREE_speedController += speedController_step;
 
   noBadStage_SPEED_NOW = DEGREE_speedController;
 
@@ -326,7 +327,7 @@ int speedController_Down (void) {
        return noBadStage_OKAY;
   }
 
-  DEGREE_speedController -= 5;
+  DEGREE_speedController -= speedController_step;
 
   noBadStage_SPEED_NOW = DEGREE_speedController;
 
