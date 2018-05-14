@@ -45,7 +45,7 @@ int DEGREE_directionServo = DIRECTION_NORMAL; // degrees to normal stage
 
 // SPEED CONTROLLER PIN 5
 
-int speedController_stopStage = 60;
+int speedController_stopStage = 70;
 int speedController_maxSpeedStage = 90;
 int speedController_step = 10;
 
@@ -68,9 +68,11 @@ void setup () {
 
   // start serial for debugging
   /*
+   * 
+   */
   Serial.begin(115200);
   Serial.println("Setup ");
-  */
+  
 
   // wifi server inits
   server.begin();
@@ -131,7 +133,6 @@ void loop () {
     directionServo.write(DEGREE_directionServo);
 
     speedController.write(DEGREE_speedController);
-
 }
 
 // @CHECK_CONTORLLER
@@ -144,7 +145,7 @@ String checkControllerAction (void) {
   // take command
   String request = controller.readStringUntil('\r');
 
-  // Serial.println(request);
+   Serial.println(request);
 
   // delete http:/someIp/ from http:/someIp/command
   request.remove(0, 5);
@@ -154,17 +155,6 @@ String checkControllerAction (void) {
   // return it
   return request;
 }
-
-// @SEND_CONTROLLER
-
-/*
-void sentSignalToController (String sig) {
-
-  while(!controller.available()) delay(1);
-
-  controller.write(sig);
-}
-*/
 
 // @EVENTS_AIRDRIVER
 
