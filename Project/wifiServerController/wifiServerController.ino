@@ -63,9 +63,6 @@ int noBadStage_DIRECTION_NOW = DIRECTION_NORMAL;
 // if in normal direction
 int noBadStage_DIRECTION_NORMAL = 1;
 
-// present stage of speed controller
-int noBadStage_SPEED_NOW = speedController_stopStage;
-
 // @SETUP
 
 void setup () {
@@ -153,31 +150,13 @@ void loop () {
     speedController.write(DEGREE_speedController);
 
     // @NOBADSTAGE_HANDLER
-    if (noBadStage_Handler != noBadStage_OKAY) {
-
-      // if (noBadStage_Handler == noBadStage_ABORT) {
+    if (noBadStage_Handler == noBadStage_ABORT) {
         airDriver_1.write(DEGREE_airDriver);
         airDriver_2.write(DEGREE_airDriver);
         speedController_Stop();
         speedController.write(DEGREE_speedController);
         directionServo_Default();
         directionServo.write(DEGREE_directionServo);
-      // }
-
-/*
-      else if (noBadStage_Handler == noBadStage_SIGNAL_DIRECTION) {
-        speedController_Stop();
-        speedController.write(DEGREE_speedController);
-        directionServo_Default();
-        directionServo.write(DEGREE_directionServo);
-      }
-
-      else if (noBadStage_Handler == noBadStage_SIGNAL_SPEED) {
-        speedController_Stop();
-        speedController.write(DEGREE_speedController);
-      }
-*/
-
     }
 
 
@@ -275,52 +254,42 @@ int directionServo_Default (void) {
 
 int speedController_Up (void) {
 
-  if (noBadStage_SPEED_NOW == speedController_maxSpeedStage)
+  if (DEGREE_speedController == speedController_maxSpeedStage)
     return noBadStage_OKAY;
 
-  else if (noBadStage_SPEED_NOW > speedController_maxSpeedStage || DEGREE_speedController > speedController_maxSpeedStage) {
+  else if (DEGREE_speedController > speedController_maxSpeedStage) {
 
-       DEGREE_speedController += speedController_maxSpeedStage;
-       noBadStage_SPEED_NOW = DEGREE_speedController;
-
+       DEGREE_speedController = speedController_maxSpeedStage;
        return noBadStage_OKAY;
   }
 
   DEGREE_speedController += speedController_step;
-
-  noBadStage_SPEED_NOW = DEGREE_speedController;
 
   return noBadStage_OKAY;
 }
 
 int speedController_Down (void) {
 
-  if (noBadStage_SPEED_NOW == speedController_stopStage)
+  if (DEGREE_speedController == speedController_stopStage)
     return noBadStage_OKAY;
 
-  else if (noBadStage_SPEED_NOW < speedController_stopStage || DEGREE_speedController < speedController_stopStage) {
+  else if (DEGREE_speedController < speedController_stopStage) {
 
-       DEGREE_speedController -= speedController_stopStage;
-       noBadStage_SPEED_NOW = DEGREE_speedController;
-
+       DEGREE_speedController = speedController_stopStage;
        return noBadStage_OKAY;
   }
 
   DEGREE_speedController -= speedController_step;
-
-  noBadStage_SPEED_NOW = DEGREE_speedController;
 
   return noBadStage_OKAY;
 }
 
 int speedController_Max (void) {
 
-  if (noBadStage_SPEED_NOW == speedController_maxSpeedStage)
+  if (DEGREE_speedController == speedController_maxSpeedStage)
     return noBadStage_OKAY;
 
   DEGREE_speedController = speedController_maxSpeedStage;
-
-  noBadStage_SPEED_NOW = DEGREE_speedController;
 
   return noBadStage_OKAY;
 }
@@ -328,8 +297,6 @@ int speedController_Max (void) {
 int speedController_Stop (void) {
 
    DEGREE_speedController = speedController_stopStage;
-
-   noBadStage_SPEED_NOW = DEGREE_speedController;
 
    return noBadStage_OKAY;
  }
