@@ -1,6 +1,6 @@
 
-#include <ESP8266WiFi.h>
 #include <Servo.h>
+#include <ESP8266WiFi.h>
 
 // @INIT
 
@@ -38,8 +38,9 @@ int DEGREE_directionServo = DIRECTION_NORMAL; // 90 is normal state
 
 // SPEED CONTROLLER PIN 5
 
-int speedController_stopStage = 65;
+int speedController_stopStage = 70;
 int speedController_maxSpeedStage = 180;
+int speedController_step = 5;
 
 int PIN_speedController = 5;
 Servo speedController;
@@ -84,25 +85,16 @@ void setup () {
 
   speedController.attach(PIN_speedController);
 
-  // servo state init
-
-  airDriver.write(DEGREE_airDriver);
-
-  directionServo.write(DEGREE_directionServo);
-
-  speedController.write(DEGREE_speedController);
-
-  // wifi server inits
-
-  IPAddress ip = WiFi.localIP();
-
-  server.begin();
 
   // start serial for debugging
   Serial.begin(115200);
   Serial.println("Setup ");
   /*
   */
+
+  // wifi server inits
+  server.begin();
+
 
 }
 
@@ -156,29 +148,44 @@ void loop () {
     else if (commandFromController == "on")
     noBadStage_Handler = airDriver_On();
 
+    // events
+    airDriver.write(DEGREE_airDriver);
+
+    directionServo.write(DEGREE_directionServo);
+
+    speedController.write(DEGREE_speedController);
+
     // @NOBADSTAGE_HANDLER
     if (noBadStage_Handler != noBadStage_OKAY) {
 
       if (noBadStage_Handler == noBadStage_SIGNAL_AIR) {
         if (noBadStage_AIR_FILLED == 1) {
           speedController_Stop();
+          speedController.write(DEGREE_speedController);
           directionServo_Default();
+          directionServo.write(DEGREE_directionServo);
         }
       }
 
       else if (noBadStage_Handler == noBadStage_ABORT) {
         airDriver_Off();
+        airDriver.write(DEGREE_airDriver);
         speedController_Stop();
+        speedController.write(DEGREE_speedController);
         directionServo_Default();
+        directionServo.write(DEGREE_directionServo);
       }
 
       else if (noBadStage_Handler == noBadStage_SIGNAL_DIRECTION) {
         speedController_Stop();
+        speedController.write(DEGREE_speedController);
         directionServo_Default();
+        directionServo.write(DEGREE_directionServo);
       }
 
       else if (noBadStage_Handler == noBadStage_SIGNAL_SPEED) {
         speedController_Stop();
+        speedController.write(DEGREE_speedController);
       }
 
     }
@@ -213,7 +220,6 @@ int airDriver_On (void) {
 
   DEGREE_airDriver = airDriver_FillStage;
 
-  airDriver.write(DEGREE_airDriver);
   noBadStage_AIR_FILLED = 1;
 
   return noBadStage_OKAY;
@@ -231,7 +237,6 @@ int airDriver_Off (void) {
 
     DEGREE_airDriver = airDriver_UnfillStage;
 
-    airDriver.write(DEGREE_airDriver);
     noBadStage_AIR_FILLED = 0;
 
     return noBadStage_OKAY;
@@ -249,7 +254,6 @@ int directionServo_Right (void) {
 
   DEGREE_directionServo = DIRECTION_RIGHT;
 
-  directionServo.write(DEGREE_directionServo);
   noBadStage_DIRECTION_NOW = DIRECTION_RIGHT;
   noBadStage_DIRECTION_NORMAL = 0;
 
@@ -266,7 +270,6 @@ int directionServo_Left (void) {
 
   DEGREE_directionServo = DIRECTION_LEFT;
 
-  directionServo.write(DEGREE_directionServo);
   noBadStage_DIRECTION_NOW = DIRECTION_LEFT;
   noBadStage_DIRECTION_NORMAL = 0;
 
@@ -277,7 +280,6 @@ int directionServo_Default (void) {
 
   DEGREE_directionServo = DIRECTION_NORMAL;
 
-  directionServo.write(DEGREE_directionServo);
   noBadStage_DIRECTION_NORMAL = 1;
   noBadStage_DIRECTION_NOW = DIRECTION_NORMAL;
 
@@ -297,15 +299,13 @@ int speedController_Up (void) {
   else if (noBadStage_SPEED_NOW > speedController_maxSpeedStage || DEGREE_speedController > speedController_maxSpeedStage) {
 
        DEGREE_speedController = speedController_maxSpeedStage;
-       speedController.write(DEGREE_speedController);
        noBadStage_SPEED_NOW = DEGREE_speedController;
 
        return noBadStage_OKAY;
   }
 
-  DEGREE_speedController += 5;
+  DEGREE_speedController += speedController_step;
 
-  speedController.write(DEGREE_speedController);
   noBadStage_SPEED_NOW = DEGREE_speedController;
 
   return noBadStage_OKAY;
@@ -322,15 +322,13 @@ int speedController_Down (void) {
   else if (noBadStage_SPEED_NOW < speedController_stopStage || DEGREE_speedController < speedController_stopStage) {
 
        DEGREE_speedController = speedController_stopStage;
-       speedController.write(DEGREE_speedController);
        noBadStage_SPEED_NOW = DEGREE_speedController;
 
        return noBadStage_OKAY;
   }
 
-  DEGREE_speedController -= 5;
+  DEGREE_speedController -= speedController_step;
 
-  speedController.write(DEGREE_speedController);
   noBadStage_SPEED_NOW = DEGREE_speedController;
 
   return noBadStage_OKAY;
@@ -346,7 +344,6 @@ int speedController_Max (void) {
 
   DEGREE_speedController = speedController_maxSpeedStage;
 
-  speedController.write(DEGREE_speedController);
   noBadStage_SPEED_NOW = DEGREE_speedController;
 
   return noBadStage_OKAY;
@@ -356,7 +353,6 @@ int speedController_Stop (void) {
 
    DEGREE_speedController = speedController_stopStage;
 
-   speedController.write(DEGREE_speedController);
    noBadStage_SPEED_NOW = DEGREE_speedController;
 
    if (noBadStage_AIR_FILLED == 0)
