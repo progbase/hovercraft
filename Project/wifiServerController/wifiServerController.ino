@@ -22,8 +22,10 @@ String  commandFromController ="";
 int airDriver_FillStage = 140;
 int airDriver_UnfillStage = 0;
 
-int PIN_airDriver = 2;
-Servo airDriver;
+int PIN_airDriver_1 = 14;
+int PIN_airDriver_2 = 12;
+Servo airDriver_1;
+Servo airDriver_2;
 int DEGREE_airDriver = airDriver_UnfillStage; // zero for full disable
 
 // DiRECTION (LEFT|RIGHT) PIN 4
@@ -79,7 +81,8 @@ void setup () {
 
   // servo init
 
-  airDriver.attach(PIN_airDriver);
+  airDriver_1.attach(PIN_airDriver_1);
+  airDriver_2.attach(PIN_airDriver_2);
 
   directionServo.attach(PIN_directionServo);
 
@@ -94,7 +97,6 @@ void setup () {
 
   // wifi server inits
   server.begin();
-
 
 }
 
@@ -149,7 +151,8 @@ void loop () {
     noBadStage_Handler = airDriver_On();
 
     // events
-    airDriver.write(DEGREE_airDriver);
+    airDriver_1.write(DEGREE_airDriver);
+    airDriver_2.write(DEGREE_airDriver);
 
     directionServo.write(DEGREE_directionServo);
 
@@ -168,8 +171,8 @@ void loop () {
       }
 
       else if (noBadStage_Handler == noBadStage_ABORT) {
-        airDriver_Off();
-        airDriver.write(DEGREE_airDriver);
+        airDriver_1.write(DEGREE_airDriver);
+        airDriver_2.write(DEGREE_airDriver);
         speedController_Stop();
         speedController.write(DEGREE_speedController);
         directionServo_Default();
@@ -227,10 +230,6 @@ int airDriver_On (void) {
 
 int airDriver_Off (void) {
 
-    if (noBadStage_SPEED_NOW != speedController_stopStage)
-      speedController_Stop();
-    if (noBadStage_DIRECTION_NORMAL != 1)
-      directionServo_Default();
 
     if (noBadStage_AIR_FILLED == 0)
       return noBadStage_SIGNAL_AIR;
@@ -238,6 +237,11 @@ int airDriver_Off (void) {
     DEGREE_airDriver = airDriver_UnfillStage;
 
     noBadStage_AIR_FILLED = 0;
+
+    if (noBadStage_SPEED_NOW != speedController_stopStage)
+      return noBadStage_ABORT;
+    if (noBadStage_DIRECTION_NORMAL != 1)
+      return noBadStage_ABORT;
 
     return noBadStage_OKAY;
 }
@@ -354,9 +358,6 @@ int speedController_Stop (void) {
    DEGREE_speedController = speedController_stopStage;
 
    noBadStage_SPEED_NOW = DEGREE_speedController;
-
-   if (noBadStage_AIR_FILLED == 0)
-    return noBadStage_ABORT;
 
    return noBadStage_OKAY;
  }
