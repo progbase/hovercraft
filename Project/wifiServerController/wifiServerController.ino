@@ -20,9 +20,9 @@ String  commandFromController ="";
 // AIR PIN 2
 
 // controller degree for fill with air
-int airDriver_Stage_Fill = 80;
+int airDriver_Stage_Fill = 115;
 // controller degree for fill with air
-int airDriver_Stage_Unfill = 0;
+int airDriver_Stage_Unfill = 100;
 
 int PIN_airDriver_1 = 14;
 int PIN_airDriver_2 = 12;
@@ -67,11 +67,9 @@ void setup () {
   speedController.attach(PIN_speedController);
 
   // start serial for debugging
-  /*
-   * 
-   */
-  Serial.begin(115200);
-  Serial.println("Setup ");
+
+//  Serial.begin(115200);
+//  Serial.println("Setup ");
   
 
   // wifi server inits
@@ -145,7 +143,7 @@ String checkControllerAction (void) {
   // take command
   String request = controller.readStringUntil('\r');
 
-   Serial.println(request);
+//   Serial.println(request);
 
   // delete http:/someIp/ from http:/someIp/command
   request.remove(0, 5);
@@ -168,7 +166,7 @@ void airDriver_On (void) {
 // off the air in (and probably all)
 void airDriver_Off (void) {
 
-    DEGREE_airDriver = airDriver_Stage_Fill;
+    DEGREE_airDriver = airDriver_Stage_Unfill;
 
     if (DEGREE_speedController != speedController_stopStage) {
       speedController_Stop();
