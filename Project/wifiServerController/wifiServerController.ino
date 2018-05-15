@@ -26,6 +26,10 @@ int airDriver_Stage_Unfill = 100;
 
 int airDriver_Stage_MiddleFill = 110;
 int airDriver_Stage_LowFill = 105;
+int airDriver_Stage_HighFill = 113;
+int airDriver_Stage_MiddleHighFill = 111;
+
+int smoothIndex = airDriver_Stage_Unfill;
 
 int PIN_airDriver_1 = 14;
 int PIN_airDriver_2 = 12;
@@ -163,16 +167,32 @@ String checkControllerAction (void) {
 // starts air in
 void airDriver_On (void) {
 
-  DEGREE_airDriver_1 = airDriver_Stage_Fill;
-  DEGREE_airDriver_2 = airDriver_Stage_LowFill;
+  for (smoothIndex = airDriver_Stage_Unfill; smoothIndex <= airDriver_Stage_HighFill; smoothIndex++) {
+    
+    DEGREE_airDriver_1 = smoothIndex;
+    DEGREE_airDriver_2 = smoothIndex;
+
+    airDriver_1.write(DEGREE_airDriver_1);
+    airDriver_2.write(DEGREE_airDriver_2);
+
+    delay(200);
+  }
 
 }
 
 // off the air in (and probably all)
 void airDriver_Off (void) {
 
-    DEGREE_airDriver_1 = airDriver_Stage_Unfill;
-    DEGREE_airDriver_2 = airDriver_Stage_Unfill;
+    for (smoothIndex = DEGREE_airDriver_1; smoothIndex >= airDriver_Stage_Unfill; smoothIndex--) {
+    
+      DEGREE_airDriver_1 = smoothIndex;
+      DEGREE_airDriver_2 = smoothIndex;
+
+      airDriver_1.write(DEGREE_airDriver_1);
+      airDriver_2.write(DEGREE_airDriver_2);
+
+      delay(200);
+    }
 
     if (DEGREE_speedController != speedController_stopStage) {
       speedController_Stop();
