@@ -24,20 +24,28 @@ int airDriver_Stage_Fill = 115;
 // controller degree for fill with air
 int airDriver_Stage_Unfill = 100;
 
+int airDriver_Stage_MiddleFill = 110;
+int airDriver_Stage_LowFill = 105;
+int airDriver_Stage_HighFill = 113;
+int airDriver_Stage_MiddleHighFill = 111;
+
+int smoothIndex = airDriver_Stage_Unfill;
+
 int PIN_airDriver_1 = 14;
 int PIN_airDriver_2 = 12;
 Servo airDriver_1;
 Servo airDriver_2;
 
 // controller degree to unfill stage
-int DEGREE_airDriver = airDriver_Stage_Unfill;
+int DEGREE_airDriver_2 = airDriver_Stage_Unfill;
+int DEGREE_airDriver_1 = airDriver_Stage_Unfill;
 
 // DiRECTION (LEFT|RIGHT) PIN 4
 
 // servo motor is not really correct in degrees
 int DIRECTION_NORMAL = 78; // == 90*
-int DIRECTION_LEFT = 108; // == 120*
-int DIRECTION_RIGHT = 48; // == 60*
+int DIRECTION_LEFT = 3; // == 120*
+int DIRECTION_RIGHT = 153; // == 60*
 
 int PIN_directionServo = 4;
 Servo directionServo;
@@ -125,8 +133,8 @@ void loop () {
       airDriver_On();
 
     // events write
-    airDriver_1.write(DEGREE_airDriver);
-    airDriver_2.write(DEGREE_airDriver);
+    airDriver_1.write(DEGREE_airDriver_1);
+    airDriver_2.write(DEGREE_airDriver_2);
 
     directionServo.write(DEGREE_directionServo);
 
@@ -159,14 +167,32 @@ String checkControllerAction (void) {
 // starts air in
 void airDriver_On (void) {
 
-  DEGREE_airDriver = airDriver_Stage_Fill;
+  for (smoothIndex = airDriver_Stage_Unfill; smoothIndex <= airDriver_Stage_HighFill; smoothIndex++) {
+    
+    DEGREE_airDriver_1 = smoothIndex;
+    DEGREE_airDriver_2 = smoothIndex;
+
+    airDriver_1.write(DEGREE_airDriver_1);
+    airDriver_2.write(DEGREE_airDriver_2);
+
+    delay(200);
+  }
 
 }
 
 // off the air in (and probably all)
 void airDriver_Off (void) {
 
-    DEGREE_airDriver = airDriver_Stage_Unfill;
+    for (smoothIndex = DEGREE_airDriver_1; smoothIndex >= airDriver_Stage_Unfill; smoothIndex--) {
+    
+      DEGREE_airDriver_1 = smoothIndex;
+      DEGREE_airDriver_2 = smoothIndex;
+
+      airDriver_1.write(DEGREE_airDriver_1);
+      airDriver_2.write(DEGREE_airDriver_2);
+
+      delay(200);
+    }
 
     if (DEGREE_speedController != speedController_stopStage) {
       speedController_Stop();
@@ -206,6 +232,10 @@ void directionServo_Left (void) {
 void directionServo_Default (void) {
 
   DEGREE_directionServo = DIRECTION_NORMAL;
+
+//  for(int i_deir_def = 0; i_deir_def < 60; i_deir_def++) {
+//    directionServo.write(DEGREE_directionServo);
+//  }
 
 }
 
