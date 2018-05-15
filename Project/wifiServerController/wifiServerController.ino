@@ -25,6 +25,7 @@ int airDriver_Stage_Fill = 115;
 int airDriver_Stage_Unfill = 100;
 
 int airDriver_Stage_MiddleFill = 110;
+int airDriver_Stage_LowFill = 105;
 
 int PIN_airDriver_1 = 14;
 int PIN_airDriver_2 = 12;
@@ -163,7 +164,7 @@ String checkControllerAction (void) {
 void airDriver_On (void) {
 
   DEGREE_airDriver_1 = airDriver_Stage_Fill;
-  DEGREE_airDriver_2 = airDriver_Stage_MiddleFill;
+  DEGREE_airDriver_2 = airDriver_Stage_LowFill;
 
 }
 
