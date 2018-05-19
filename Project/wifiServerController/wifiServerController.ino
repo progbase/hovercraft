@@ -53,9 +53,9 @@ int DEGREE_directionServo = DIRECTION_NORMAL; // degrees to normal stage
 
 // SPEED CONTROLLER PIN 5
 
-int speedController_stopStage = 70;
-int speedController_maxSpeedStage = 90;
-int speedController_step = 10;
+int speedController_stopStage = 30;
+int speedController_maxSpeedStage = 180;
+int speedController_step = 50;
 
 int PIN_speedController = 5;
 Servo speedController;
@@ -78,7 +78,7 @@ void setup () {
 
 //  Serial.begin(115200);
 //  Serial.println("Setup ");
-  
+
 
   // wifi server inits
   server.begin();
@@ -167,8 +167,8 @@ String checkControllerAction (void) {
 // starts air in
 void airDriver_On (void) {
 
-  for (smoothIndex = airDriver_Stage_Unfill; smoothIndex <= airDriver_Stage_HighFill; smoothIndex++) {
-    
+  for (smoothIndex = airDriver_Stage_Unfill; smoothIndex <= airDriver_Stage_Fill; smoothIndex++) {
+
     DEGREE_airDriver_1 = smoothIndex;
     DEGREE_airDriver_2 = smoothIndex;
 
@@ -184,7 +184,7 @@ void airDriver_On (void) {
 void airDriver_Off (void) {
 
     for (smoothIndex = DEGREE_airDriver_1; smoothIndex >= airDriver_Stage_Unfill; smoothIndex--) {
-    
+
       DEGREE_airDriver_1 = smoothIndex;
       DEGREE_airDriver_2 = smoothIndex;
 
@@ -233,10 +233,6 @@ void directionServo_Default (void) {
 
   DEGREE_directionServo = DIRECTION_NORMAL;
 
-//  for(int i_deir_def = 0; i_deir_def < 60; i_deir_def++) {
-//    directionServo.write(DEGREE_directionServo);
-//  }
-
 }
 
 // @EVENTS_SPEEDCONTROLLER
@@ -262,6 +258,7 @@ void speedController_Max (void) {
     return;
 
   DEGREE_speedController = speedController_maxSpeedStage;
+
 }
 
 // speeddown the speed to stop position
