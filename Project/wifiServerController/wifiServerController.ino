@@ -43,9 +43,9 @@ int DEGREE_airDriver_1 = airDriver_Stage_Unfill;
 // DiRECTION (LEFT|RIGHT) PIN 4
 
 // servo motor is not really correct in degrees
-int DIRECTION_NORMAL = 78; // == 90*
-int DIRECTION_LEFT = 3; // == 120*
-int DIRECTION_RIGHT = 153; // == 60*
+int DIRECTION_NORMAL = 98; // == 90*
+int DIRECTION_LEFT = 58; // == 120*
+int DIRECTION_RIGHT = 138; // == 60*
 
 int PIN_directionServo = 4;
 Servo directionServo;
@@ -54,8 +54,11 @@ int DEGREE_directionServo = DIRECTION_NORMAL; // degrees to normal stage
 // SPEED CONTROLLER PIN 5
 
 int speedController_stopStage = 30;
-int speedController_maxSpeedStage = 180;
-int speedController_step = 50;
+int speedController_FirstSpeed = 40;
+int speedController_SecondSpeed = 120;
+int speedController_ThirdSpeed = 160;
+// int speedController_maxSpeedStage = 180;
+// int speedController_step = 50;
 
 int PIN_speedController = 5;
 Servo speedController;
@@ -71,6 +74,8 @@ void setup () {
   airDriver_2.attach(PIN_airDriver_2);
 
   directionServo.attach(PIN_directionServo);
+
+  directionServo.write(DIRECTION_NORMAL);
 
   speedController.attach(PIN_speedController);
 
@@ -116,7 +121,7 @@ void loop () {
     else if (commandFromController == "speeddown")
       speedController_Down();
 
-    // If the incoming command is "stop", run the speedController_Stop function
+    // If the incoming command is "stop", run the speedController_stopStage function
     else if (commandFromController == "stop")
       speedController_Stop();
 
@@ -151,7 +156,7 @@ String checkControllerAction (void) {
   // take command
   String request = controller.readStringUntil('\r');
 
-//   Serial.println(request);
+//  Serial.println(request);
 
   // delete http:/someIp/ from http:/someIp/command
   request.remove(0, 5);
@@ -167,6 +172,8 @@ String checkControllerAction (void) {
 // starts air in
 void airDriver_On (void) {
 
+  // smooth airdriver filling
+/*
   for (smoothIndex = airDriver_Stage_Unfill; smoothIndex <= airDriver_Stage_Fill; smoothIndex++) {
 
     DEGREE_airDriver_1 = smoothIndex;
@@ -177,12 +184,23 @@ void airDriver_On (void) {
 
     delay(200);
   }
+*/
+
+  // thunder airdriver filling
+
+    DEGREE_airDriver_1 = airDriver_Stage_Fill;
+    DEGREE_airDriver_2 = airDriver_Stage_Fill;
+
+    airDriver_1.write(DEGREE_airDriver_1);
+    airDriver_2.write(DEGREE_airDriver_2);
 
 }
 
 // off the air in (and probably all)
 void airDriver_Off (void) {
 
+  // smooth airdriver stop
+/*
     for (smoothIndex = DEGREE_airDriver_1; smoothIndex >= airDriver_Stage_Unfill; smoothIndex--) {
 
       DEGREE_airDriver_1 = smoothIndex;
@@ -193,6 +211,16 @@ void airDriver_Off (void) {
 
       delay(200);
     }
+
+*/
+
+  // thinder airdriver stop
+
+    DEGREE_airDriver_1 = airDriver_Stage_Unfill;
+    DEGREE_airDriver_2 = airDriver_Stage_Unfill;
+
+    airDriver_1.write(DEGREE_airDriver_1);
+    airDriver_2.write(DEGREE_airDriver_2);
 
     if (DEGREE_speedController != speedController_stopStage) {
       speedController_Stop();
@@ -240,24 +268,47 @@ void directionServo_Default (void) {
 // speedup the speed by step
 void speedController_Up (void) {
 
-  DEGREE_speedController += speedController_step;
+  if (DEGREE_speedController >= speedController_ThirdSpeed)
+    return;
+  else if (DEGREE_speedController == speedController_stopStage) {
+    for (int smoothSpdStrt = speedController_stopStage; smoothSpdStrt < speedController_FirstSpeed; smoothSpdStrt++) {
+      DEGREE_speedController += 1;
+      speedController.write(DEGREE_speedController);
+      delay(100);
+    }
+    DEGREE_speedController = speedController_FirstSpeed;
+  }
+  else if (DEGREE_speedController == speedController_FirstSpeed)
+    DEGREE_speedController = speedController_SecondSpeed;
+  else if (DEGREE_speedController == speedController_SecondSpeed)
+    DEGREE_speedController = speedController_ThirdSpeed;
 
 }
 
 // speeddown the speed by step
 void speedController_Down (void) {
 
-  DEGREE_speedController -= speedController_step;
+  if (DEGREE_speedController <= speedController_stopStage)
+    return;
+  else if (DEGREE_speedController == speedController_ThirdSpeed)
+    DEGREE_speedController = speedController_SecondSpeed;
+  else if (DEGREE_speedController == speedController_SecondSpeed)
+    DEGREE_speedController = speedController_FirstSpeed;
+  else if (DEGREE_speedController == speedController_FirstSpeed)
+    DEGREE_speedController = speedController_stopStage;
 
 }
 
 // speedup the speed to max speed position
 void speedController_Max (void) {
 
-  if (DEGREE_speedController >= speedController_maxSpeedStage)
+ if (DEGREE_speedController == speedController_stopStage)
+   speedController_Up();
+
+  if (DEGREE_speedController >= speedController_ThirdSpeed)
     return;
 
-  DEGREE_speedController = speedController_maxSpeedStage;
+  DEGREE_speedController = speedController_ThirdSpeed;
 
 }
 
